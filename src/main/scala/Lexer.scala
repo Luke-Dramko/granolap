@@ -6,7 +6,7 @@ object Lexer extends RegexParsers {
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\f]+".r
 
-  def identifier: Parser[Identifier] = {
+  private[this] def identifier: Parser[Identifier] = {
     """[-a-zA-Z!%&|!<>*_=+][-a-zA-Z0-9!%&|!<>*_=+]*""".r ^^ { str => Identifier(str) }
   }
 
@@ -139,7 +139,9 @@ object Lexer extends RegexParsers {
   }
 
   /**
-    * It's only necessary to call this method in order to lexically analyze an entire program string.
+    * Tokenizes the program string.
+    *
+    * @return a list of tokens representing the program string.
     */
   def tokens: Parser[List[Token]] = {
     phrase(rep1(_if | _else | _let | _case | _default | _import | _typedef |  _def | _int | _uint | _float | _string
@@ -152,7 +154,7 @@ object Lexer extends RegexParsers {
     * Modifies the token stream.
     * Modificiations include
     * - All instances of "as" as an identifier are replaced with the "As" token
-    *
+    * - All instances of "=" as an identifier are replaced with the "EqualsSign" token
     *
     * @param ts a list of tokens
     * @return Modified list of tokens
@@ -167,9 +169,16 @@ object Lexer extends RegexParsers {
     }
   }
 
+  /**
+    *
+    *
+    * @param code A string representing a granola specification
+    * @return A list of tokens formed from the string
+    * @throws LexicalException(message) if the string cannot be tokenized
+    */
   def apply(code: String): List[Token] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, _) => throw new Exception(msg)
+      case NoSuccess(msg, _) => throw new LexicalException(msg)
       case Success(result, _) => result
     }
   }

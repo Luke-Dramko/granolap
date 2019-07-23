@@ -12,8 +12,8 @@ class LexerTests extends org.scalatest.FunSuite {
   }
 
   test("Function Assertion") {
-    assert(Lexer("def foo(Int x, Float y, Bool z) -> String { \n string(x) + y + z } \n\n assert stuff == foo(a, b, c)") ===
-    List(Def, Identifier("foo"), LParen, _Int, Identifier("x"), Comma, _Float, Identifier("y"), Comma, _Bool, Identifier("z"),
+    assert(Lexer("def foo(x: Int, y: Float, z: Bool) -> String { \n string(x) + y + z } \n\n assert stuff == foo(a, b, c)") ===
+    List(Def, Identifier("foo"), LParen, Identifier("x"), Colon, _Int, Comma, Identifier("y"), Colon, _Float, Comma, Identifier("z"), Colon, _Bool,
       RParen, Arrow, _String, LCurlyBrace, NewLine, Identifier("string"), LParen, Identifier("x"), RParen, Identifier("+"), Identifier("y"),
       Identifier("+"), Identifier("z"), RCurlyBrace, NewLine, NewLine, Identifier("assert"), Identifier("stuff"), Identifier("=="),
       Identifier("foo"), LParen, Identifier("a"), Comma, Identifier("b"), Comma, Identifier("c"), RParen))

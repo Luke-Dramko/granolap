@@ -142,6 +142,10 @@ object Lexer extends RegexParsers {
     "in" ^^ { str => In }
   }
 
+  private[this] def colon: Parser[Token] = {
+    ":" ^^ { str => Colon }
+  }
+
   /**
     * Tokenizes the program string.
     *
@@ -151,7 +155,7 @@ object Lexer extends RegexParsers {
     phrase(rep1(_if | _else | _let | _case | _default | _import | _typedef |  _def | _int | _uint | _float | _string
     | _bool | _enum | enumValue | _null | nullValue | arrow | newLine | in | boolconstant | identifier |
       floatconstant | intconstant | stringconstant | lParen | rParen | lCurlyBrace | rCurlyBrace |
-    lBracket | rBracket | comma )) ^^ { raw => postprocessing(raw) }
+    lBracket | rBracket | comma | colon )) ^^ { raw => postprocessing(raw) }
   }
 
   /**

@@ -24,6 +24,7 @@ case class ParentheticalExpression(expression: Expression) extends Expression
 case class OptionalExpression(expression: Expression) extends Expression
 case class Ascription(expression: Expression, ascriptedType: Type) extends Expression
 case class Selection(expression: Expression, item: IntConstant) extends Expression
+case class VariableExpression(variable: Identifier) extends Expression
 case object NullExpression extends Expression
 
 sealed trait Constant extends Expression

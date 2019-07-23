@@ -4,7 +4,7 @@ import scala.util.parsing.combinator._
 
 object Lexer extends RegexParsers {
   override def skipWhitespace = true
-  override val whiteSpace = "[ \t\r\f]+".r
+  override val whiteSpace = "[ \t\r\f\n]+".r
 
   private[this] def identifier: Parser[Identifier] = {
     """[-a-zA-Z!%&|!<>*_=+][-a-zA-Z0-9!%&|!<>*_=+]*""".r ^^ { str => Identifier(str) }

@@ -20,6 +20,7 @@ case class CaseExpression(variable: Identifier, cases: List[(CasePattern, Expres
 case class FunctionCall(name: Identifier, params: List[Expression]) extends Expression
 case class AnonymousFunction(args: List[(Identifier, Type)], body: Expression) extends Expression
 case class LetExpression(variable: Identifier, e1: Expression, e2: Expression) extends Expression
+case class ParentheticalExpression(expression: Expression) extends Expression
 case class OptionalExpression(expression: Expression) extends Expression
 case class Ascription(expression: Expression, ascriptedType: Type) extends Expression
 case class Selection(expression: Expression, item: IntConstant) extends Expression

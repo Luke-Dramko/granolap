@@ -34,3 +34,4 @@ case object RCurlyBrace extends Token
 case object LBracket extends Token
 case object RBracket extends Token
 case object Comma extends Token
+case object In extends Token

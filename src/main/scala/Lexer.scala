@@ -138,6 +138,10 @@ object Lexer extends RegexParsers {
     "," ^^ { str => Comma }
   }
 
+  private[this] def in: Parser[Token] = {
+    "in" ^^ { str => In }
+  }
+
   /**
     * Tokenizes the program string.
     *
@@ -145,7 +149,7 @@ object Lexer extends RegexParsers {
     */
   def tokens: Parser[List[Token]] = {
     phrase(rep1(_if | _else | _let | _case | _default | _import | _typedef |  _def | _int | _uint | _float | _string
-    | _bool | _enum | enumValue | _null | nullValue | arrow | newLine | boolconstant | identifier |
+    | _bool | _enum | enumValue | _null | nullValue | arrow | newLine | in | boolconstant | identifier |
       floatconstant | intconstant | stringconstant | lParen | rParen | lCurlyBrace | rCurlyBrace |
     lBracket | rBracket | comma )) ^^ { raw => postprocessing(raw) }
   }

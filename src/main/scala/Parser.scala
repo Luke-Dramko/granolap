@@ -39,7 +39,7 @@ object GranolaParser extends Parsers {
   }
 
   def params: Parser[List[Param]] = {
-    val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ p => p ++ List(Param(name, t)) }
+    val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ p => List(Param(name, t)) ++ p }
     val last = identifier ~ Colon ~ _type ~ RParen ^^ { case name ~ _ ~ t ~ _ => List(Param(name, t))}
     val none = RParen ^^ { case _ => List() }
 

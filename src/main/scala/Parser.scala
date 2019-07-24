@@ -86,7 +86,7 @@ object GranolaParser extends Parsers {
 
   def apply(tokens: List[Token]): Program = {
     program(new TokenReader(tokens)) match {
-      case NoSuccess(msg, _) => throw new Exception(msg)
+      case NoSuccess(msg, _) => throw new ParsingException(msg)
       case Success(result, _) => result
     }
   }

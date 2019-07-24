@@ -45,6 +45,7 @@ case object UIntType extends Type
 case object FloatType extends Type
 case object BoolType extends Type
 case object StringType extends Type
+case class DefinedType(name: Identifier) extends Type
 case class ArrayType(elements: Type) extends Type
 case class TupleType(elements: List[(Identifier, Type)]) extends Type
 case class SumType(options: List[(Identifier, Type)]) extends Type

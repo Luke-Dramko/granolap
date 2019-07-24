@@ -103,7 +103,7 @@ object GranolaParser extends Parsers {
     //val anonymousfunc = identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type) ~ Arrow ~ expression
 
     //*** Missing support for cases.
-    val letexpr = Let ~ identifier ~ EqualsSign ~ expression ~ { In.? } ~ expression ^^
+    val letexpr = Let ~ identifier ~ EqualsSign ~ expression ~ In.? ~ expression ^^
       { case _ ~ variable ~ _ ~ e1 ~ _ ~ e2 => LetExpression(variable, e1, e2) }
 
     val parentheticalexpr = LParen ~ expression ~ RParen ^^ { case _ ~ e ~ _ => ParentheticalExpression(e)}

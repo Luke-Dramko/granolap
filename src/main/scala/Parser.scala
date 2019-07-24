@@ -3,6 +3,11 @@ package granolap
 import scala.util.parsing.combinator._
 
 object GranolaParser extends Parsers {
+//  private var lr2argfunc: Boolean = true
+//  private var lrtuple: Boolean = true
+//  private var lroptional: Boolean = true
+//  private var lrascription: Boolean = true
+
   override type Elem = Token
 
   private def identifier: Parser[Identifier] = accept("identifier", {case id @ Identifier(_) => id})
@@ -33,14 +38,18 @@ object GranolaParser extends Parsers {
     _String ^^ { _ => StringType }
   }
 
-  def definedFunction: Parser[DefinedFunction] = {
-    val argexpr = {identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type)}.?
+  def params: Parser[List[Param]] = {
+    val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ a => a ++ List(Param(name, t)) }
+    val last = identifier ~ Colon ~ _type ~ RParen ^^ { case name ~ _ ~ t ~ _ => List(Param(name, t))}
+    val none = RParen ^^ { case _ => List() }
 
-    println(argexpr)
+    none | last | more
+  }
 
-    Def ~ identifier ~ LParen ~ {identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type)}.? ~ RParen ~
-    Arrow ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-      { case _ ~ name ~ _ ~ args ~ _ ~ _ ~ _ ~ body ~ _ => null } //*** placeholder
+  def definedFunction: Parser[Expression] = {
+    //RParen is explicitly left out as it is handled by the params function.
+    Def ~ identifier ~ LParen ~ params ~ Arrow ~ _type ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
+      { case _ ~ name ~ _ ~ ps ~ _ ~ t ~ _ ~ body ~ _ => FunctionDef(name, ps, t, body) }
   }
 
   def expression: Parser[Expression] = {
@@ -54,11 +63,16 @@ object GranolaParser extends Parsers {
     val ifletexpr = If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~
       rep(Else ~ If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace) ~
       Else ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-        { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ _ ~ _ ~ _ ~ bf ~_ => IfLetExpression(List((id1, e1, b1)), bf)}
+        { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ _ ~ _ ~ _ ~ bf ~ _ => IfLetExpression(List((id1, e1, b1)), bf)}
+
+    val caseexpr = Case ~ identifier ~ RCurlyBrace ~ rep(casepattern ~ Arrow ~ expression) ~
+      { Default ~ Arrow ~ expression }.? ~ LCurlyBrace ^^
+      { case _ ~ variable ~ _ ~ _ ~ _ ~ _ => CaseExpression(variable, List()) }
 
     //*** Missing support for function arguments
     val fcall = identifier ~ LParen ~ { expression ~ rep(Comma ~ expression) }.? ~ RParen ^^
       { case name ~ _ ~ _ ~ _ => FunctionCall(name, List()) }
+
 
     //val arg2fcall = expression ~ identifier ~ expression ^^ { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
 
@@ -66,6 +80,7 @@ object GranolaParser extends Parsers {
 
     //val anonymousfunc = identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type) ~ Arrow ~ expression
 
+    //*** Missing support for cases.
     val letexpr = Let ~ identifier ~ EqualsSign ~ expression ~ { In.? } ~ expression ^^
       { case _ ~ variable ~ _ ~ e1 ~ _ ~ e2 => LetExpression(variable, e1, e2) }
 
@@ -73,15 +88,27 @@ object GranolaParser extends Parsers {
 
     val idexpr = identifier ^^ { id => VariableExpression(id) }
 
-    //*** Missing support for tuple selection
+    val definedfuncexpr = definedFunction
+
+    //*** Missing support for type ascription and optionalization (left recursive)
+    //*** Missing support for tuple selection (left recursive)
 
     val boolc = boolconst ^^ { case bc => BoolConstantExpr(bc) }
     val stringc = stringconst ^^ { case sc => StringConstantExpr(sc) }
     val intc = intconst ^^ { case ic => IntConstantExpr(ic) }
     val floatc = floatconst ^^ { case fc => FloatConstantExpr(fc) }
+    val nullc = NullValue ^^ { case _ => NullExpression }
 
 
-    ifexpr | ifletexpr | fcall | arg1fcall | letexpr | parentheticalexpr | idexpr | boolc | stringc | intc | floatc
+    ifexpr | ifletexpr | fcall | arg1fcall | letexpr | parentheticalexpr | definedfuncexpr |
+      idexpr | boolc | stringc | intc | floatc | nullc
+  }
+
+  def casepattern: Parser[CasePattern] = {
+    val typecp = Let ~ identifier ~ Colon ~ _type ^^ { case _ ~ x ~ _ ~ t => LetCasePattern(x, t)}
+    val enumcp = rep(identifier) ^^ { case choices => ListCasePattern(choices) }
+
+    typecp | enumcp
   }
 
   def apply(tokens: List[Token]): Program = {

@@ -9,8 +9,9 @@ case class ImportStatement(variable: Identifier, renamed: Identifier) extends St
 case class TypedefStatement(variable: Identifier, castedtype: Type) extends Statement
 
 
-sealed trait DefinedFunction
-case class FunctionDef(name: Identifier, args: List[(Identifier, Type)], returnType: Type, body: Expression) extends DefinedFunction
+case class FunctionDef(name: Identifier, params: List[Param], returnType: Type, body: Expression) extends Expression
+
+case class Param(varname: Identifier, vartype: Type)
 
 
 sealed trait Expression
@@ -36,7 +37,7 @@ case class StringConstantExpr(value: StringConstant) extends Constant
 
 sealed trait CasePattern
 case class LetCasePattern(variable: Identifier, variableType: Type) extends CasePattern
-case class ListCasePattern(options: List[Identifier])
+case class ListCasePattern(options: List[Identifier]) extends CasePattern
 
 
 sealed trait Type

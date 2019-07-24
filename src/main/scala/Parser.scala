@@ -39,7 +39,7 @@ object GranolaParser extends Parsers {
   }
 
   def params: Parser[List[Param]] = {
-    val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ a => a ++ List(Param(name, t)) }
+    val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ p => p ++ List(Param(name, t)) }
     val last = identifier ~ Colon ~ _type ~ RParen ^^ { case name ~ _ ~ t ~ _ => List(Param(name, t))}
     val none = RParen ^^ { case _ => List() }
 
@@ -50,6 +50,14 @@ object GranolaParser extends Parsers {
     //RParen is explicitly left out as it is handled by the params function.
     Def ~ identifier ~ LParen ~ params ~ Arrow ~ _type ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
       { case _ ~ name ~ _ ~ ps ~ _ ~ t ~ _ ~ body ~ _ => FunctionDef(name, ps, t, body) }
+  }
+
+  def args: Parser[List[Expression]] = {
+    val more = expression ~ Comma ~ args ^^ { case e ~ _ ~ a => List(e) ++ a }
+    val last = expression ~ RParen ^^ { case e ~ _ => List(e) }
+    val none = RParen ^^ { case _ => List() }
+
+    none | last | more
   }
 
   def expression: Parser[Expression] = {
@@ -69,10 +77,8 @@ object GranolaParser extends Parsers {
       { Default ~ Arrow ~ expression }.? ~ LCurlyBrace ^^
       { case _ ~ variable ~ _ ~ _ ~ _ ~ _ => CaseExpression(variable, List()) }
 
-    //*** Missing support for function arguments
-    val fcall = identifier ~ LParen ~ { expression ~ rep(Comma ~ expression) }.? ~ RParen ^^
-      { case name ~ _ ~ _ ~ _ => FunctionCall(name, List()) }
-
+    //Right parenthesis is purposefully missing as it is consumed by the args function as a delimiter.
+    val fcall = identifier ~ LParen ~ args ^^ { case name ~ _ ~ ps => FunctionCall(name, ps) }
 
     //val arg2fcall = expression ~ identifier ~ expression ^^ { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
 

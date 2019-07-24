@@ -78,12 +78,12 @@ object GranolaParser extends Parsers {
 
   def expression: Parser[Expression] = {
 
-    //The else is consumed by the elseifs function as a delimiter.
+    //The final else is consumed by the elseifs function as a delimiter.
     val ifexpr = If ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ elseifs ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
         { case _ ~ condition ~ _ ~ truebody ~ _ ~ eifs ~ _ ~ falsebody ~ _ =>
           IfExpression(IfSubExpression(condition, truebody) :: eifs, falsebody)}
 
-    //*** Missing support for else if lets
+    //The final else is consumed by the elseiflets function as a delimiter.
     val ifletexpr = If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~
       elseiflets ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
         { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>

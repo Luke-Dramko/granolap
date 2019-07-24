@@ -36,3 +36,5 @@ case object RBracket extends Token
 case object Comma extends Token
 case object In extends Token
 case object Colon extends Token
+case object Dot extends Token
+case object QuestionMark extends Token

@@ -146,6 +146,14 @@ object Lexer extends RegexParsers {
     ":" ^^ { str => Colon }
   }
 
+  private[this] def dot: Parser[Token] = {
+    "." ^^ { str => Dot }
+  }
+
+  private[this] def questionMark: Parser[Token] = {
+    "?" ^^ { str => QuestionMark }
+  }
+
   /**
     * Tokenizes the program string.
     *
@@ -155,7 +163,7 @@ object Lexer extends RegexParsers {
     phrase(rep1(_if | _else | _let | _case | _default | _import | _typedef |  _def | _int | _uint | _float | _string
     | _bool | _enum | enumValue | _null | nullValue | arrow | newLine | in | boolconstant | identifier |
       floatconstant | intconstant | stringconstant | lParen | rParen | lCurlyBrace | rCurlyBrace |
-    lBracket | rBracket | comma | colon )) ^^ { raw => postprocessing(raw) }
+    lBracket | rBracket | comma | colon | dot | questionMark )) ^^ { raw => postprocessing(raw) }
   }
 
   /**

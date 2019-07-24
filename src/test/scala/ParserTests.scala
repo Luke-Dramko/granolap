@@ -48,4 +48,28 @@ class ParserTests extends org.scalatest.FunSuite {
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(LetExpression(Identifier("x"),IntConstantExpr(IntConstant("1")),FunctionCall(Identifier("decrement"),List(VariableExpression(Identifier("x"))))))))
   }
 
+  test("Case expression for enums") {
+    val code =
+      """
+        case x {
+           Monday -> 2
+           Friday, Saturday, Sunday -> 3
+           default -> 1
+        }
+      """.stripMargin
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(CaseExpression(Identifier("x"),List(CaseEntry(ListCasePattern(List(Identifier("Monday"))),IntConstantExpr(IntConstant("2"))), CaseEntry(ListCasePattern(List(Identifier("Friday"), Identifier("Saturday"), Identifier("Sunday"))),IntConstantExpr(IntConstant("3"))), CaseEntry(DefaultCasePattern,IntConstantExpr(IntConstant("1"))))))))
+  }
+
+  test("Case expression for general sum type") {
+    val code =
+      """
+        case x {
+           let x: Int -> x
+           let y: Float -> toint y
+           default -> 0
+        }
+      """.stripMargin
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(CaseExpression(Identifier("x"),List(CaseEntry(LetCasePattern(Identifier("x"),IntType),VariableExpression(Identifier("x"))), CaseEntry(LetCasePattern(Identifier("y"),FloatType),FunctionCall(Identifier("toint"),List(VariableExpression(Identifier("y"))))), CaseEntry(DefaultCasePattern,IntConstantExpr(IntConstant("0"))))))))
+  }
 }

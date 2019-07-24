@@ -76,6 +76,51 @@ object GranolaParser extends Parsers {
     more | none
   }
 
+
+  //This set of methods:
+  // letCaseEntries
+  // listCaseEntriesHelper
+  // listCaseEntries
+  // caseentries
+  // are helper methods for the case construct.
+  def letCaseEntries: Parser[List[CaseEntry]] = {
+    val letce = Let ~ identifier ~ Colon ~ _type ~ Arrow ~ expression ~ letCaseEntries ^^
+      { case _ ~ id ~ _ ~ t ~ _ ~ e ~ cases => List(CaseEntry(LetCasePattern(id, t), e)) ++ cases}
+
+    val defaultce = Default ~ Arrow ~ expression ^^ { case _ ~ _ ~ e => List(CaseEntry(DefaultCasePattern, e))}
+
+    letce | defaultce
+  }
+
+  def listCaseEntriesHelper: Parser[List[Identifier]] = {
+    val more = identifier ~ Comma ~ listCaseEntriesHelper ^^ { case id ~ _ ~ cases => List(id) ++ cases }
+    val one = identifier ~ Arrow ^^ { case id ~ _ => List(id) }
+
+    more | one
+  }
+
+  def listCaseEntries: Parser[List[CaseEntry]] = {
+    val listce = listCaseEntriesHelper ~ expression ~ listCaseEntries ^^
+      { case ids ~ e ~ ces => List(CaseEntry(ListCasePattern(ids), e)) ++ ces}
+
+    val defaultce = Default ~ Arrow ~ expression ^^ { case _ ~ _ ~ e => List(CaseEntry(DefaultCasePattern, e))}
+
+    listce | defaultce
+  }
+
+  def caseentries: Parser[List[CaseEntry]] = {
+    val letce = Let ~ identifier ~ Colon ~ _type ~ Arrow ~ expression ~ letCaseEntries ^^
+      { case _ ~ id ~ _ ~ t ~ _ ~ e ~ ces => List(CaseEntry(LetCasePattern(id, t), e)) ++ ces}
+
+    //The Arrow token is consumed by the listCaseEntriesHelper method
+    val listce = listCaseEntriesHelper ~ expression ~ listCaseEntries ^^
+      { case ids ~ e ~ ces => List(CaseEntry(ListCasePattern(ids), e)) ++ ces }
+
+    val defaultce = Default ~ Arrow ~ expression ^^ { case _ ~ _ ~ e => List(CaseEntry(DefaultCasePattern, e))}
+
+    letce | listce | defaultce
+  }
+
   def expression: Parser[Expression] = {
 
     //The final else is consumed by the elseifs function as a delimiter.
@@ -89,9 +134,8 @@ object GranolaParser extends Parsers {
         { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>
           IfLetExpression(IfLetSubExpression(id1, e1, b1) :: eifls, bf)}
 
-    val caseexpr = Case ~ identifier ~ RCurlyBrace ~ rep(casepattern ~ Arrow ~ expression) ~
-      { Default ~ Arrow ~ expression }.? ~ LCurlyBrace ^^
-      { case _ ~ variable ~ _ ~ _ ~ _ ~ _ => CaseExpression(variable, List()) }
+    val caseexpr = Case ~ identifier ~ LCurlyBrace ~ caseentries ~ RCurlyBrace ^^
+      { case _ ~ id ~ _ ~ cases ~ _ => CaseExpression(id, cases) }
 
     //Right parenthesis is purposefully missing as it is consumed by the args function as a delimiter.
     val fcall = identifier ~ LParen ~ args ^^ { case name ~ _ ~ ps => FunctionCall(name, ps) }
@@ -102,7 +146,6 @@ object GranolaParser extends Parsers {
 
     //val anonymousfunc = identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type) ~ Arrow ~ expression
 
-    //*** Missing support for cases.
     val letexpr = Let ~ identifier ~ EqualsSign ~ expression ~ In.? ~ expression ^^
       { case _ ~ variable ~ _ ~ e1 ~ _ ~ e2 => LetExpression(variable, e1, e2) }
 
@@ -122,15 +165,8 @@ object GranolaParser extends Parsers {
     val nullc = NullValue ^^ { case _ => NullExpression }
 
 
-    ifexpr | ifletexpr | fcall | arg1fcall | letexpr | parentheticalexpr | definedfuncexpr |
+    ifexpr | ifletexpr | caseexpr | fcall | arg1fcall | letexpr | parentheticalexpr | definedfuncexpr |
       idexpr | boolc | stringc | intc | floatc | nullc
-  }
-
-  def casepattern: Parser[CasePattern] = {
-    val typecp = Let ~ identifier ~ Colon ~ _type ^^ { case _ ~ x ~ _ ~ t => LetCasePattern(x, t)}
-    val enumcp = rep(identifier) ^^ { case choices => ListCasePattern(choices) }
-
-    typecp | enumcp
   }
 
   def apply(tokens: List[Token]): Program = {

@@ -17,7 +17,7 @@ case class Param(varname: Identifier, vartype: Type)
 sealed trait Expression
 case class IfExpression(cases: List[IfSubExpression], elseBody: Expression) extends Expression
 case class IfLetExpression(cases: List[IfLetSubExpression], elseBody: Expression) extends Expression
-case class CaseExpression(variable: Identifier, cases: List[(CasePattern, Expression)]) extends Expression
+case class CaseExpression(variable: Identifier, cases: List[CaseEntry]) extends Expression
 case class FunctionCall(name: Identifier, params: List[Expression]) extends Expression
 case class AnonymousFunction(args: List[(Identifier, Type)], body: Expression) extends Expression
 case class LetExpression(variable: Identifier, e1: Expression, e2: Expression) extends Expression
@@ -38,9 +38,12 @@ case class BoolConstantExpr(value: BoolConstant) extends Constant
 case class StringConstantExpr(value: StringConstant) extends Constant
 
 
+case class CaseEntry(pattern: CasePattern, expression: Expression)
+
 sealed trait CasePattern
 case class LetCasePattern(variable: Identifier, variableType: Type) extends CasePattern
 case class ListCasePattern(options: List[Identifier]) extends CasePattern
+case object DefaultCasePattern extends CasePattern
 
 
 sealed trait Type

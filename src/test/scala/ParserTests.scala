@@ -15,4 +15,16 @@ class ParserTests extends org.scalatest.FunSuite {
     val code = "assert x"
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("assert"),List(VariableExpression(Identifier("x")))))))
   }
+
+  test("Defined function") {
+    val code =
+      """
+        def foo(y: Bool) -> Bool {
+           not y
+        }
+
+        assert foo z
+      """.stripMargin
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionDef(Identifier("foo"),List(Param(Identifier("y"),BoolType)),BoolType,FunctionCall(Identifier("not"),List(VariableExpression(Identifier("y"))))), FunctionCall(Identifier("assert"),List(FunctionCall(Identifier("foo"),List(VariableExpression(Identifier("z")))))))))
+  }
 }

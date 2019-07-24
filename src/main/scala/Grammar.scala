@@ -15,8 +15,8 @@ case class Param(varname: Identifier, vartype: Type)
 
 
 sealed trait Expression
-case class IfExpression(cases: List[(Expression, Expression)], elseBody: Expression) extends Expression
-case class IfLetExpression(cases: List[(Identifier, Expression, Expression)], elseBody: Expression) extends Expression
+case class IfExpression(cases: List[IfSubExpression], elseBody: Expression) extends Expression
+case class IfLetExpression(cases: List[IfLetSubExpression], elseBody: Expression) extends Expression
 case class CaseExpression(variable: Identifier, cases: List[(CasePattern, Expression)]) extends Expression
 case class FunctionCall(name: Identifier, params: List[Expression]) extends Expression
 case class AnonymousFunction(args: List[(Identifier, Type)], body: Expression) extends Expression
@@ -27,6 +27,9 @@ case class Ascription(expression: Expression, ascriptedType: Type) extends Expre
 case class Selection(expression: Expression, item: IntConstant) extends Expression
 case class VariableExpression(variable: Identifier) extends Expression
 case object NullExpression extends Expression
+
+case class IfSubExpression(condition: Expression, body: Expression)
+case class IfLetSubExpression(variable: Identifier, condition: Expression, body: Expression)
 
 sealed trait Constant extends Expression
 case class FloatConstantExpr(value: FloatConstant) extends Constant

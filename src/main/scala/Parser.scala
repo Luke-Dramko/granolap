@@ -60,18 +60,34 @@ object GranolaParser extends Parsers {
     none | last | more
   }
 
+  def elseifs: Parser[List[IfSubExpression]] = {
+    val more = Else ~ If ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ elseifs ^^
+      { case _ ~ _ ~ condition ~ _ ~ body ~ _ ~ additional => List(IfSubExpression(condition, body)) ++ additional }
+    val none = Else ^^ { case _ => List[IfSubExpression]() }
+
+    more | none
+  }
+
+  def elseiflets: Parser[List[IfLetSubExpression]] = {
+    val more = Else ~ If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ elseiflets ^^
+      { case _ ~ _ ~ _ ~ id ~ _ ~ condition ~ _ ~ body ~ _ ~ additional => List(IfLetSubExpression(id, condition, body)) ++ additional }
+    val none = Else ^^ { case _ => List[IfLetSubExpression]() }
+
+    more | none
+  }
+
   def expression: Parser[Expression] = {
 
-    //*** Missing support for else ifs.
-    val ifexpr = If ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ rep(Else ~ If ~ expression ~ LCurlyBrace ~ expression ~
-      RCurlyBrace) ~ Else ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-        { case _ ~ condition ~ _ ~ truebody ~ _ ~ _ ~ _ ~ _ ~ falsebody ~ _ => IfExpression(List((condition, truebody)), falsebody)}
+    //The else is consumed by the elseifs function as a delimiter.
+    val ifexpr = If ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ elseifs ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
+        { case _ ~ condition ~ _ ~ truebody ~ _ ~ eifs ~ _ ~ falsebody ~ _ =>
+          IfExpression(IfSubExpression(condition, truebody) :: eifs, falsebody)}
 
     //*** Missing support for else if lets
     val ifletexpr = If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~
-      rep(Else ~ If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace) ~
-      Else ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-        { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ _ ~ _ ~ _ ~ bf ~ _ => IfLetExpression(List((id1, e1, b1)), bf)}
+      elseiflets ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
+        { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>
+          IfLetExpression(IfLetSubExpression(id1, e1, b1) :: eifls, bf)}
 
     val caseexpr = Case ~ identifier ~ RCurlyBrace ~ rep(casepattern ~ Arrow ~ expression) ~
       { Default ~ Arrow ~ expression }.? ~ LCurlyBrace ^^

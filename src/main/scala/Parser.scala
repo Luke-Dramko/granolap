@@ -3,11 +3,6 @@ package granolap
 import scala.util.parsing.combinator._
 
 object GranolaParser extends Parsers {
-//  private var lr2argfunc: Boolean = true
-//  private var lrtuple: Boolean = true
-//  private var lroptional: Boolean = true
-//  private var lrascription: Boolean = true
-
   override type Elem = Token
 
   private def identifier: Parser[Identifier] = accept("identifier", {case id @ Identifier(_) => id})
@@ -204,7 +199,6 @@ object GranolaParser extends Parsers {
     optionalexpr | indexedtupleselect | indexedtupleselect | labeledtupleselect | ascription | subexpression
   }
 
-
   def subexpression: Parser[Expression] = {
 
     //The final else is consumed by the elseifs function as a delimiter.
@@ -224,7 +218,7 @@ object GranolaParser extends Parsers {
     //Right parenthesis is purposefully missing as it is consumed by the args function as a delimiter.
     val fcall = identifier ~ LParen ~ args ^^ { case name ~ _ ~ ps => FunctionCall(name, ps) }
 
-    val arg1fcall = identifier ~ expression ^^ { case name ~ e => FunctionCall(name, List(e)) }
+    //val fcall1arg = identifier ~ expression ^^ { case name ~ e => FunctionCall(name, List(e)) }
 
     val anonymousfunc = LParen ~ params ~ Arrow ~ expression ^^
       { case _ ~ ps ~ _ ~ e => AnonymousFunction(ps, e) }
@@ -238,17 +232,18 @@ object GranolaParser extends Parsers {
 
     val definedfuncexpr = definedFunction
 
-    //*** Missing support for type ascription and optionalization (left recursive)
-    //*** Missing support for tuple selection (left recursive)
-
     val boolc = boolconst ^^ { case bc => BoolConstantExpr(bc) }
     val stringc = stringconst ^^ { case sc => StringConstantExpr(sc) }
     val intc = intconst ^^ { case ic => IntConstantExpr(ic) }
     val floatc = floatconst ^^ { case fc => FloatConstantExpr(fc) }
     val nullc = NullValue ^^ { case _ => NullExpression }
 
+    val fcall2args = { fcall | idexpr | boolc | stringc | intc | floatc | nullc } ~
+      identifier ~ expression ^^
+      { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
 
-    ifexpr | ifletexpr | caseexpr | fcall | arg1fcall | letexpr | anonymousfunc | parentheticalexpr | definedfuncexpr |
+
+    ifexpr | ifletexpr | caseexpr | letexpr | anonymousfunc | parentheticalexpr | definedfuncexpr | fcall2args | fcall |
       idexpr | boolc | stringc | intc | floatc | nullc
   }
 

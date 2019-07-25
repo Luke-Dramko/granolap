@@ -12,7 +12,7 @@ class ParserTests extends org.scalatest.FunSuite {
   }
 
   test("Simple assertion") {
-    val code = "assert x"
+    val code = "assert(x)"
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("assert"),List(VariableExpression(Identifier("x")))))))
   }
 
@@ -20,16 +20,16 @@ class ParserTests extends org.scalatest.FunSuite {
     val code =
       """
         def foo(y: Bool, z: Int) -> Bool {
-           not y
+           not(y)
         }
 
-        assert foo z
+        assert(foo(z))
       """.stripMargin
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionDef(Identifier("foo"),List(Param(Identifier("y"),BoolType), Param(Identifier("z"),IntType)),BoolType,FunctionCall(Identifier("not"),List(VariableExpression(Identifier("y"))))), FunctionCall(Identifier("assert"),List(FunctionCall(Identifier("foo"),List(VariableExpression(Identifier("z")))))))))
   }
 
   test("Function call") {
-    val code = "function(a, not b, not not c)"
+    val code = "function(a, not(b), not(not(c)))"
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("function"),List(VariableExpression(Identifier("a")), FunctionCall(Identifier("not"),List(VariableExpression(Identifier("b")))), FunctionCall(Identifier("not"),List(FunctionCall(Identifier("not"),List(VariableExpression(Identifier("c")))))))))))
   }
 
@@ -39,12 +39,12 @@ class ParserTests extends org.scalatest.FunSuite {
   }
 
   test("If/else if expression") {
-    val code = "if x { a } else if dec x { b } else if y { b } else { c }"
+    val code = "if x { a } else if dec(x) { b } else if y { b } else { c }"
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(IfExpression(List(IfSubExpression(VariableExpression(Identifier("x")),VariableExpression(Identifier("a"))), IfSubExpression(FunctionCall(Identifier("dec"),List(VariableExpression(Identifier("x")))),VariableExpression(Identifier("b"))), IfSubExpression(VariableExpression(Identifier("y")),VariableExpression(Identifier("b")))),VariableExpression(Identifier("c"))))))
   }
 
   test("Let expression") {
-    val code = "let x = 1 in decrement x"
+    val code = "let x = 1 in decrement(x)"
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(LetExpression(Identifier("x"),IntConstantExpr(IntConstant("1")),FunctionCall(Identifier("decrement"),List(VariableExpression(Identifier("x"))))))))
   }
 
@@ -65,7 +65,7 @@ class ParserTests extends org.scalatest.FunSuite {
       """
         case x {
            let x: Int -> x
-           let y: Float -> toint y
+           let y: Float -> toint(y)
            default -> 0
         }
       """.stripMargin
@@ -148,5 +148,11 @@ class ParserTests extends org.scalatest.FunSuite {
       """.stripMargin
 
     assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("nested"),TupleType(List(LabeledElement(IdentifierLabel(Identifier("sub")),TupleType(List(LabeledElement(IndexLabel(1),IntType), LabeledElement(IndexLabel(2),BoolType)))), LabeledElement(IdentifierLabel(Identifier("cont")),BoolType))))),List(IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("cont"))),LetExpression(Identifier("y"),Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("sub"))),IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("y")),IndexLabel(2)),Selection(VariableExpression(Identifier("y")),IndexLabel(1)))),IntConstantExpr(IntConstant("1")))))),IntConstantExpr(IntConstant("0"))))))
+  }
+
+  test("Two argument function shorthand") {
+    val code = "function(a) + functioncall(a)"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("+"),List(FunctionCall(Identifier("function"),List(VariableExpression(Identifier("a")))), FunctionCall(Identifier("functioncall"),List(VariableExpression(Identifier("a")))))))))
   }
 }

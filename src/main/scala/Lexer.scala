@@ -111,6 +111,7 @@ object Lexer extends RegexParsers {
         else if (id == "enum") EnumValue :: postprocessing(ts)
         else if (id == "Null") _Null :: postprocessing(ts)
         else if (id == "null") NullValue :: postprocessing(ts)
+        else if (id == "or") Or :: postprocessing(ts)
         else Identifier(id) :: postprocessing(ts)
       }
       case x: Token => x :: postprocessing(ts)

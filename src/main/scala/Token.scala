@@ -39,3 +39,4 @@ case object In extends Token
 case object Colon extends Token
 case object Dot extends Token
 case object QuestionMark extends Token
+case object Or extends Token

@@ -85,7 +85,7 @@ class ParserTests extends org.scalatest.FunSuite {
         typedef node as (Node, Array[Int])
       """.stripMargin
 
-    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledElement(IndexLabel(1),DefinedType(Identifier("Node"))), LabeledElement(IndexLabel(2),ArrayType(IntType)))))),List()))
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledElement(IndexLabel(0),DefinedType(Identifier("Node"))), LabeledElement(IndexLabel(1),ArrayType(IntType)))))),List()))
   }
 
   test("Labeled tuple") {
@@ -137,17 +137,17 @@ class ParserTests extends org.scalatest.FunSuite {
 
         if x.cont {
            let y = x.sub
-           if y.2 {
-             y.1
+           if y.1 {
+             y.0
            } else {
-             1
+             0
            }
         } else {
-          0
+          -1
         }
       """.stripMargin
 
-    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("nested"),TupleType(List(LabeledElement(IdentifierLabel(Identifier("sub")),TupleType(List(LabeledElement(IndexLabel(1),IntType), LabeledElement(IndexLabel(2),BoolType)))), LabeledElement(IdentifierLabel(Identifier("cont")),BoolType))))),List(IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("cont"))),LetExpression(Identifier("y"),Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("sub"))),IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("y")),IndexLabel(2)),Selection(VariableExpression(Identifier("y")),IndexLabel(1)))),IntConstantExpr(IntConstant("1")))))),IntConstantExpr(IntConstant("0"))))))
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("nested"),TupleType(List(LabeledElement(IdentifierLabel(Identifier("sub")),TupleType(List(LabeledElement(IndexLabel(0),IntType), LabeledElement(IndexLabel(1),BoolType)))), LabeledElement(IdentifierLabel(Identifier("cont")),BoolType))))),List(IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("cont"))),LetExpression(Identifier("y"),Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("sub"))),IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("y")),IndexLabel(1)),Selection(VariableExpression(Identifier("y")),IndexLabel(0)))),IntConstantExpr(IntConstant("0")))))),IntConstantExpr(IntConstant("-1"))))))
   }
 
   test("Two argument function shorthand") {

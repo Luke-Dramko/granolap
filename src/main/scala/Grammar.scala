@@ -1,7 +1,6 @@
 package granolap
 
-sealed trait Program
-case class Assertion(header: List[Statement], body: List[Expression]) extends Program
+case class Assertion(header: List[Statement], body: List[Expression])
 
 
 sealed trait Statement

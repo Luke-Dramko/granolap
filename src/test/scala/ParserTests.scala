@@ -117,4 +117,36 @@ class ParserTests extends org.scalatest.FunSuite {
 
     assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("Func"),FunctionType(List(IntType, EnumType(List(Identifier("SMALL"), Identifier("MEDIUM"), Identifier("LARGE"))), FunctionType(List(IntType),IntType), SumType(List(BoolType, DefinedType(Identifier("Error"))))),IntType))),List()))
   }
+
+  test("Ascription") {
+    val code = "substring(x) as String"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(Ascription(FunctionCall(Identifier("substring"),List(VariableExpression(Identifier("x")))),StringType))))
+  }
+
+  test("Optional ascription shorthand") {
+    val code = "evaluate(x, y)?"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(OptionalExpression(FunctionCall(Identifier("evaluate"),List(VariableExpression(Identifier("x")), VariableExpression(Identifier("y"))))))))
+  }
+
+  test("Tuple selection") {
+    val code =
+      """
+        typedef nested as (sub: (Int, Bool), cont: Bool)
+
+        if x.cont {
+           let y = x.sub
+           if y.2 {
+             y.1
+           } else {
+             1
+           }
+        } else {
+          0
+        }
+      """.stripMargin
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("nested"),TupleType(List(LabeledElement(IdentifierLabel(Identifier("sub")),TupleType(List(LabeledElement(IndexLabel(1),IntType), LabeledElement(IndexLabel(2),BoolType)))), LabeledElement(IdentifierLabel(Identifier("cont")),BoolType))))),List(IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("cont"))),LetExpression(Identifier("y"),Selection(VariableExpression(Identifier("x")),IdentifierLabel(Identifier("sub"))),IfExpression(List(IfSubExpression(Selection(VariableExpression(Identifier("y")),IndexLabel(2)),Selection(VariableExpression(Identifier("y")),IndexLabel(1)))),IntConstantExpr(IntConstant("1")))))),IntConstantExpr(IntConstant("0"))))))
+  }
 }

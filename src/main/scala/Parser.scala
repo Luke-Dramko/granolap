@@ -34,17 +34,17 @@ object GranolaParser extends Parsers {
 
   //Helper methods for the _type method
 
-  def tuplets(index: Int): Parser[List[LabeledType]] = {
-    val one = Comma ~ _type ~ RParen ^^ { case _ ~ t ~ _ => List(LabeledType(IndexLabel(index), t)) }
-    val more = Comma ~ _type ~ tuplets(index + 1) ^^ { case _ ~ t ~ ts => List(LabeledType(IndexLabel(index), t)) ++ ts }
+  def tuplets(index: Int): Parser[List[LabeledElement]] = {
+    val one = Comma ~ _type ~ RParen ^^ { case _ ~ t ~ _ => List(LabeledElement(IndexLabel(index), t)) }
+    val more = Comma ~ _type ~ tuplets(index + 1) ^^ { case _ ~ t ~ ts => List(LabeledElement(IndexLabel(index), t)) ++ ts }
 
     one | more
   }
 
-  def labeledtuplets: Parser[List[LabeledType]] = {
-    val one = Comma ~ identifier ~ Colon ~ _type ~ RParen ^^ { case _ ~ l ~ _ ~ t ~ _ => List(LabeledType(IdentifierLabel(l), t))}
+  def labeledtuplets: Parser[List[LabeledElement]] = {
+    val one = Comma ~ identifier ~ Colon ~ _type ~ RParen ^^ { case _ ~ l ~ _ ~ t ~ _ => List(LabeledElement(IdentifierLabel(l), t))}
     val more = Comma ~ identifier ~ Colon ~ _type ~ labeledtuplets ^^
-      { case _ ~ l ~ _ ~ t ~ ts => List(LabeledType(IdentifierLabel(l), t)) ++ ts}
+      { case _ ~ l ~ _ ~ t ~ ts => List(LabeledElement(IdentifierLabel(l), t)) ++ ts}
 
     one | more
   }
@@ -89,9 +89,9 @@ object GranolaParser extends Parsers {
     val nullt = _Null ^^ { _ => NullType }
 
     val arrayt = _Array ~ LBracket ~ _type ~ RBracket ^^ { case _ ~ _ ~ et ~ _ => ArrayType(et) }
-    val tuplet = LParen ~ _type ~ tuplets(2) ^^ { case _ ~ t ~ ts => TupleType(List(LabeledType(IndexLabel(1), t)) ++ ts) }
+    val tuplet = LParen ~ _type ~ tuplets(2) ^^ { case _ ~ t ~ ts => TupleType(List(LabeledElement(IndexLabel(1), t)) ++ ts) }
     val labeledtuplet = LParen ~ identifier ~ Colon ~ _type ~ labeledtuplets ^^
-      {case _ ~ l ~ _ ~ t ~ ts => TupleType(List(LabeledType(IdentifierLabel(l), t)) ++ ts) }
+      {case _ ~ l ~ _ ~ t ~ ts => TupleType(List(LabeledElement(IdentifierLabel(l), t)) ++ ts) }
     val sumt = LParen ~ _type ~ sumts ^^ { case _ ~ t ~ ts => SumType(List(t) ++ ts)}
     val enumt = _Enum ~ LParen ~ identifier ~ identifierlist ^^ { case _ ~ _ ~ id ~ ids => EnumType(id :: ids)}
     //Right parenthesis consumed by typelist function.
@@ -192,24 +192,37 @@ object GranolaParser extends Parsers {
 
   def expression: Parser[Expression] = {
 
+    //val fcall2args = subexpression ~ identifier ~ expression ^^ { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
+    val optionalexpr = subexpression ~ QuestionMark ^^ { case e ~ _ => OptionalExpression(e) }
+    val ascription = subexpression ~ As ~ _type ^^ { case e ~ _ ~ t => Ascription(e, t) }
+
+    //Hypothetically, the i.toInt here could fail with an exception, but the regex which captures the string for IntConstant
+    //ensures that it will be convertible to an integer. If toInt throws an exception, modify the regex in the lexer.
+    val indexedtupleselect = subexpression ~ Dot ~ intconst ^^ { case e ~ _ ~ IntConstant(i) => Selection(e, IndexLabel(i.toInt)) }
+    val labeledtupleselect = subexpression ~ Dot ~ identifier ^^ { case e ~ _ ~ id => Selection(e, IdentifierLabel(id))}
+
+    optionalexpr | indexedtupleselect | indexedtupleselect | labeledtupleselect | ascription | subexpression
+  }
+
+
+  def subexpression: Parser[Expression] = {
+
     //The final else is consumed by the elseifs function as a delimiter.
     val ifexpr = If ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~ elseifs ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-        { case _ ~ condition ~ _ ~ truebody ~ _ ~ eifs ~ _ ~ falsebody ~ _ =>
-          IfExpression(IfSubExpression(condition, truebody) :: eifs, falsebody)}
+      { case _ ~ condition ~ _ ~ truebody ~ _ ~ eifs ~ _ ~ falsebody ~ _ =>
+        IfExpression(IfSubExpression(condition, truebody) :: eifs, falsebody)}
 
     //The final else is consumed by the elseiflets function as a delimiter.
     val ifletexpr = If ~ Let ~ identifier ~ EqualsSign ~ expression ~ LCurlyBrace ~ expression ~ RCurlyBrace ~
       elseiflets ~ LCurlyBrace ~ expression ~ RCurlyBrace ^^
-        { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>
-          IfLetExpression(IfLetSubExpression(id1, e1, b1) :: eifls, bf)}
+      { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>
+        IfLetExpression(IfLetSubExpression(id1, e1, b1) :: eifls, bf)}
 
     val caseexpr = Case ~ identifier ~ LCurlyBrace ~ caseentries ~ RCurlyBrace ^^
       { case _ ~ id ~ _ ~ cases ~ _ => CaseExpression(id, cases) }
 
     //Right parenthesis is purposefully missing as it is consumed by the args function as a delimiter.
     val fcall = identifier ~ LParen ~ args ^^ { case name ~ _ ~ ps => FunctionCall(name, ps) }
-
-    //val arg2fcall = expression ~ identifier ~ expression ^^ { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
 
     val arg1fcall = identifier ~ expression ^^ { case name ~ e => FunctionCall(name, List(e)) }
 

@@ -85,7 +85,7 @@ class ParserTests extends org.scalatest.FunSuite {
         typedef node as (Node, Array[Int])
       """.stripMargin
 
-    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledType(IndexLabel(1),DefinedType(Identifier("Node"))), LabeledType(IndexLabel(2),ArrayType(IntType)))))),List()))
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledElement(IndexLabel(1),DefinedType(Identifier("Node"))), LabeledElement(IndexLabel(2),ArrayType(IntType)))))),List()))
   }
 
   test("Labeled tuple") {
@@ -94,7 +94,7 @@ class ParserTests extends org.scalatest.FunSuite {
         typedef node as (next: Node, elements: Array[Int])
       """.stripMargin
 
-    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledType(IdentifierLabel(Identifier("next")),DefinedType(Identifier("Node"))), LabeledType(IdentifierLabel(Identifier("elements")),ArrayType(IntType)))))),List()))
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledElement(IdentifierLabel(Identifier("next")),DefinedType(Identifier("Node"))), LabeledElement(IdentifierLabel(Identifier("elements")),ArrayType(IntType)))))),List()))
   }
 
   test("Sum type") {

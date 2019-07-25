@@ -1,7 +1,6 @@
 package granolap
 
-sealed trait Program
-case class Assertion(header: List[Statement], body: List[Expression]) extends Program
+case class Assertion(header: List[Statement], body: List[Expression])
 
 
 sealed trait Statement
@@ -24,7 +23,7 @@ case class LetExpression(variable: Identifier, e1: Expression, e2: Expression) e
 case class ParentheticalExpression(expression: Expression) extends Expression
 case class OptionalExpression(expression: Expression) extends Expression
 case class Ascription(expression: Expression, ascriptedType: Type) extends Expression
-case class Selection(expression: Expression, item: IntConstant) extends Expression
+case class Selection(expression: Expression, item: ElementLabel) extends Expression
 case class VariableExpression(variable: Identifier) extends Expression
 case object NullExpression extends Expression
 
@@ -55,13 +54,13 @@ case object StringType extends Type
 case object NullType extends Type
 case class DefinedType(name: Identifier) extends Type
 case class ArrayType(elements: Type) extends Type
-case class TupleType(elements: List[LabeledType]) extends Type
+case class TupleType(elements: List[LabeledElement]) extends Type
 case class SumType(options: List[Type]) extends Type
 case class EnumType(options: List[Identifier]) extends Type
 case class FunctionType(paramTypes: List[Type], returnType: Type) extends Type
 
-case class LabeledType(label: TypeLabel, vartype: Type) extends Type
+case class LabeledElement(label: ElementLabel, vartype: Type) extends Type
 
-sealed trait TypeLabel
-case class IdentifierLabel(label: Identifier) extends TypeLabel
-case class IndexLabel(label: Int) extends TypeLabel
+sealed trait ElementLabel
+case class IdentifierLabel(label: Identifier) extends ElementLabel
+case class IndexLabel(label: Int) extends ElementLabel

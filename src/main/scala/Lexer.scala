@@ -11,11 +11,11 @@ object Lexer extends RegexParsers {
   }
 
   private[this] def intconstant: Parser[IntConstant] = {
-    "[0-9]+".r ^^ { str => IntConstant(str) }
+    "-?[0-9]+".r ^^ { str => IntConstant(str) }
   }
 
   private[this] def floatconstant: Parser[FloatConstant] = {
-    """[0-9]+\.([0-9]*)?""".r ^^ { str => FloatConstant(str) }
+    """-?[0-9]+\.([0-9]*)?""".r ^^ { str => FloatConstant(str) }
   }
 
   private[this] def stringconstant: Parser[StringConstant] = {
@@ -72,7 +72,7 @@ object Lexer extends RegexParsers {
     * @return a list of tokens representing the program string.
     */
   def tokens: Parser[List[Token]] = {
-    phrase(rep1( boolconstant | identifier | floatconstant | intconstant | stringconstant | lParen | rParen |
+    phrase(rep1( boolconstant | floatconstant | intconstant | identifier | stringconstant | lParen | rParen |
       lCurlyBrace | rCurlyBrace | lBracket | rBracket | comma | colon | dot | questionMark )) ^^
       { raw => postprocessing(raw) }
   }

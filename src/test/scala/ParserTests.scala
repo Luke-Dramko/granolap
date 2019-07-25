@@ -155,4 +155,11 @@ class ParserTests extends org.scalatest.FunSuite {
 
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("+"),List(FunctionCall(Identifier("function"),List(VariableExpression(Identifier("a")))), FunctionCall(Identifier("functioncall"),List(VariableExpression(Identifier("a")))))))))
   }
+
+  test("Optional type") {
+    val code = "typedef OptInt as Int?"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("OptInt"),SumType(List(IntType, NullType)))),List())
+    )
+  }
 }

@@ -129,12 +129,23 @@ object GranolaParser extends Parsers {
 
 
   /**
-    * This method returns a parser of types.
+    * This method returns a parser of types. Most of the responsibility is given to the typehelper method. The _type method
+    * checks for types that would otherwise be left-recursive, then calls the typehelper method to check for all other types.
     *
-    * @return
+    * @return a parser of types
     */
   def _type: Parser[Type] = {
-    //Primitive type
+    val optionaltype = typehelper ~ QuestionMark ^^ { case t ~ _ => SumType(List(t, NullType)) }
+
+    optionaltype | typehelper
+  }
+
+  /**
+    * The typehelper method does most of the checking for types.
+    *
+    * @return a parser or types
+    */
+  def typehelper: Parser[Type] = {
     val intt  =_Int ^^ { _ => IntType }
     val uintt = _UInt ^^ { _ => UIntType }
     val floatt = _Float ^^ { _ => FloatType }
@@ -151,9 +162,6 @@ object GranolaParser extends Parsers {
     val enumt = _Enum ~ LParen ~ identifier ~ identifierlist ^^ { case _ ~ _ ~ id ~ ids => EnumType(id :: ids)}
     //Right parenthesis consumed by typelist function.
     val functiont = LParen ~ typelist ~ Arrow ~ _type ^^ { case _ ~ ts ~ _ ~ rt => FunctionType(ts, rt)}
-
-
-
 
     intt | uintt | floatt | boolt | stringt | definedt | functiont | nullt | arrayt | tuplet | labeledtuplet | sumt | enumt
   }

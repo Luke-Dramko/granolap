@@ -19,7 +19,7 @@ object Lexer extends RegexParsers {
   }
 
   private[this] def stringconstant: Parser[StringConstant] = {
-    """"([^"]|\")*"""".r ^^ { str => StringConstant(str.substring(1, str.length - 1)) }
+    """"([^"\\]|\\")*"""".r ^^ { str => StringConstant(str.substring(1, str.length - 1)) }
   }
 
   private[this] def boolconstant: Parser[BoolConstant] = {

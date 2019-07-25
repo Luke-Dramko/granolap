@@ -90,4 +90,25 @@ class ParserTests extends org.scalatest.FunSuite {
 
     assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledType(IdentifierLabel(Identifier("next")),DefinedType(Identifier("Node"))), LabeledType(IdentifierLabel(Identifier("elements")),ArrayType(IntType)))))),List()))
   }
+
+  test("Sum type") {
+    val code =
+      """
+        typedef randomsumtype as (Int or Float or (Float) -> Int)
+      """.stripMargin
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("randomsumtype"),SumType(List(IntType, FloatType, FunctionType(List(FloatType),IntType))))),List()))
+  }
+
+  test("Enum type") {
+    val code = "typedef weekdays as Enum(Monday, Tuesday, Wednesday, Thursday, Friday)"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("weekdays"),EnumType(List(Identifier("Monday"), Identifier("Tuesday"), Identifier("Wednesday"), Identifier("Thursday"), Identifier("Friday"))))),List()))
+  }
+
+  test("Function type") {
+    val code = "typedef Func as (Int, Enum(SMALL, MEDIUM, LARGE), (Int) -> Int, (Bool or Error)) -> Int"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("Func"),FunctionType(List(IntType, EnumType(List(Identifier("SMALL"), Identifier("MEDIUM"), Identifier("LARGE"))), FunctionType(List(IntType),IntType), SumType(List(BoolType, DefinedType(Identifier("Error"))))),IntType))),List()))
+  }
 }

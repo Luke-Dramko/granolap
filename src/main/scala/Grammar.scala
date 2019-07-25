@@ -52,14 +52,16 @@ case object UIntType extends Type
 case object FloatType extends Type
 case object BoolType extends Type
 case object StringType extends Type
+case object NullType extends Type
 case class DefinedType(name: Identifier) extends Type
 case class ArrayType(elements: Type) extends Type
 case class TupleType(elements: List[LabeledType]) extends Type
-case class SumType(options: List[LabeledType]) extends Type
+case class SumType(options: List[Type]) extends Type
 case class EnumType(options: List[Identifier]) extends Type
+case class FunctionType(paramTypes: List[Type], returnType: Type) extends Type
 
 case class LabeledType(label: TypeLabel, vartype: Type) extends Type
 
 sealed trait TypeLabel
-case class IdentifierLabel(lablel: Identifier) extends TypeLabel
+case class IdentifierLabel(label: Identifier) extends TypeLabel
 case class IndexLabel(label: Int) extends TypeLabel

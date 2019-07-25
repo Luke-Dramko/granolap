@@ -49,6 +49,34 @@ object GranolaParser extends Parsers {
     one | more
   }
 
+  def sumts: Parser[List[Type]] = {
+    val one = Or ~ _type ~ RParen ^^ { case _ ~ t ~ _ => List(t)}
+    val more = Or ~ _type ~ sumts ^^ { case _ ~ t ~ ts => List(t) ++ ts}
+
+    one | more
+  }
+
+  def identifierlist: Parser[List[Identifier]] = {
+    val zero = RParen ^^ { case _ => List[Identifier]() }
+    val more = Comma ~ identifier ~ identifierlist ^^ { case _ ~ id ~ ids => List(id) ++ ids }
+
+    zero | more
+  }
+
+  def typelisthelper: Parser[List[Type]] = {
+    val zero = RParen ^^ { case _ => List[Type]() }
+    val more = Comma ~ _type ~ typelisthelper ^^ { case _ ~ t ~ ts => t :: ts }
+
+    more | zero
+  }
+
+  def typelist: Parser[List[Type]] = {
+    val zero = RParen ^^ { case _ => List() }
+    val one = _type ~ typelisthelper ^^ { case t ~ ts => List(t) ++ ts }
+
+    zero | one
+  }
+
 
   def _type: Parser[Type] = {
     //Primitive type
@@ -58,15 +86,21 @@ object GranolaParser extends Parsers {
     val boolt = _Bool ^^ { _ => BoolType }
     val stringt = _String ^^ { _ => StringType }
     val definedt = identifier ^^ { t => DefinedType(t) }
+    val nullt = _Null ^^ { _ => NullType }
 
     val arrayt = _Array ~ LBracket ~ _type ~ RBracket ^^ { case _ ~ _ ~ et ~ _ => ArrayType(et) }
     val tuplet = LParen ~ _type ~ tuplets(2) ^^ { case _ ~ t ~ ts => TupleType(List(LabeledType(IndexLabel(1), t)) ++ ts) }
     val labeledtuplet = LParen ~ identifier ~ Colon ~ _type ~ labeledtuplets ^^
       {case _ ~ l ~ _ ~ t ~ ts => TupleType(List(LabeledType(IdentifierLabel(l), t)) ++ ts) }
+    val sumt = LParen ~ _type ~ sumts ^^ { case _ ~ t ~ ts => SumType(List(t) ++ ts)}
+    val enumt = _Enum ~ LParen ~ identifier ~ identifierlist ^^ { case _ ~ _ ~ id ~ ids => EnumType(id :: ids)}
+    //Right parenthesis consumed by typelist function.
+    val functiont = LParen ~ typelist ~ Arrow ~ _type ^^ { case _ ~ ts ~ _ ~ rt => FunctionType(ts, rt)}
 
 
 
-    intt | uintt | floatt | boolt | stringt | definedt | arrayt | tuplet | labeledtuplet
+
+    intt | uintt | floatt | boolt | stringt | definedt | functiont | nullt | arrayt | tuplet | labeledtuplet | sumt | enumt
   }
 
 

@@ -21,7 +21,7 @@ class LexerTests extends org.scalatest.FunSuite {
 
   test("All Tokens") {
     assert(Lexer("bacon 1 1.0 \"stuff\" true if else let case default import typedef as def Int UInt Float String Bool Enum" +
-      "enum Null null -> = (){}[],in .?") ===
+      " enum Null null -> = (){}[],in .?") ===
       List(Identifier("bacon"), IntConstant("1"), FloatConstant("1.0"), StringConstant("stuff"), BoolConstant("true"), If, Else,
         Let, Case, Default, Import, Typedef, As, Def, _Int, _UInt, _Float, _String, _Bool, _Enum, EnumValue, _Null, NullValue,
         Arrow, EqualsSign, LParen, RParen, LCurlyBrace, RCurlyBrace, LBracket, RBracket, Comma, In, Dot, QuestionMark))

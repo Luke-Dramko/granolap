@@ -20,6 +20,7 @@ case object _UInt extends Token
 case object _Float extends Token
 case object _String extends Token
 case object _Bool extends Token
+case object _Array extends Token
 case object _Enum extends Token
 case object EnumValue extends Token
 case object _Null extends Token

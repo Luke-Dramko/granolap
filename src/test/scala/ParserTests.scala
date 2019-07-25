@@ -72,4 +72,22 @@ class ParserTests extends org.scalatest.FunSuite {
 
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(CaseExpression(Identifier("x"),List(CaseEntry(LetCasePattern(Identifier("x"),IntType),VariableExpression(Identifier("x"))), CaseEntry(LetCasePattern(Identifier("y"),FloatType),FunctionCall(Identifier("toint"),List(VariableExpression(Identifier("y"))))), CaseEntry(DefaultCasePattern,IntConstantExpr(IntConstant("0"))))))))
   }
+
+  test("Unlabeled tuple") {
+    val code =
+      """
+        typedef node as (Node, Array[Int])
+      """.stripMargin
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledType(IndexLabel(1),DefinedType(Identifier("Node"))), LabeledType(IndexLabel(2),ArrayType(IntType)))))),List()))
+  }
+
+  test("Labeled tuple") {
+    val code =
+      """
+        typedef node as (next: Node, elements: Array[Int])
+      """.stripMargin
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("node"),TupleType(List(LabeledType(IdentifierLabel(Identifier("next")),DefinedType(Identifier("Node"))), LabeledType(IdentifierLabel(Identifier("elements")),ArrayType(IntType)))))),List()))
+  }
 }

@@ -32,11 +32,46 @@ object GranolaParser extends Parsers {
     importStatement | typedefStatement
   }
 
-  //*** Handle more complex types as well!!!!
-  def _type: Parser[Type] = {
-    _Int ^^ { _ => IntType } | _UInt ^^ { _ => UIntType } | _Float ^^ { _ => FloatType } | _Bool ^^ { _ => BoolType } |
-    _String ^^ { _ => StringType }
+  //Helper methods for the _type method
+
+  def tuplets(index: Int): Parser[List[LabeledType]] = {
+    val one = Comma ~ _type ~ RParen ^^ { case _ ~ t ~ _ => List(LabeledType(IndexLabel(index), t)) }
+    val more = Comma ~ _type ~ tuplets(index + 1) ^^ { case _ ~ t ~ ts => List(LabeledType(IndexLabel(index), t)) ++ ts }
+
+    one | more
   }
+
+  def labeledtuplets: Parser[List[LabeledType]] = {
+    val one = Comma ~ identifier ~ Colon ~ _type ~ RParen ^^ { case _ ~ l ~ _ ~ t ~ _ => List(LabeledType(IdentifierLabel(l), t))}
+    val more = Comma ~ identifier ~ Colon ~ _type ~ labeledtuplets ^^
+      { case _ ~ l ~ _ ~ t ~ ts => List(LabeledType(IdentifierLabel(l), t)) ++ ts}
+
+    one | more
+  }
+
+
+  def _type: Parser[Type] = {
+    //Primitive type
+    val intt  =_Int ^^ { _ => IntType }
+    val uintt = _UInt ^^ { _ => UIntType }
+    val floatt = _Float ^^ { _ => FloatType }
+    val boolt = _Bool ^^ { _ => BoolType }
+    val stringt = _String ^^ { _ => StringType }
+    val definedt = identifier ^^ { t => DefinedType(t) }
+
+    val arrayt = _Array ~ LBracket ~ _type ~ RBracket ^^ { case _ ~ _ ~ et ~ _ => ArrayType(et) }
+    val tuplet = LParen ~ _type ~ tuplets(2) ^^ { case _ ~ t ~ ts => TupleType(List(LabeledType(IndexLabel(1), t)) ++ ts) }
+    val labeledtuplet = LParen ~ identifier ~ Colon ~ _type ~ labeledtuplets ^^
+      {case _ ~ l ~ _ ~ t ~ ts => TupleType(List(LabeledType(IdentifierLabel(l), t)) ++ ts) }
+
+
+
+    intt | uintt | floatt | boolt | stringt | definedt | arrayt | tuplet | labeledtuplet
+  }
+
+
+
+  //Helper methods for the expression method
 
   def params: Parser[List[Param]] = {
     val more = identifier ~ Colon ~ _type ~ Comma ~ params ^^ { case name ~ _ ~ t ~ _ ~ p => List(Param(name, t)) ++ p }

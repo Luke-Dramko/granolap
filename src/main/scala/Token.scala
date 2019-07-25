@@ -20,6 +20,7 @@ case object _UInt extends Token
 case object _Float extends Token
 case object _String extends Token
 case object _Bool extends Token
+case object _Array extends Token
 case object _Enum extends Token
 case object EnumValue extends Token
 case object _Null extends Token
@@ -35,3 +36,7 @@ case object LBracket extends Token
 case object RBracket extends Token
 case object Comma extends Token
 case object In extends Token
+case object Colon extends Token
+case object Dot extends Token
+case object QuestionMark extends Token
+case object Or extends Token

@@ -73,6 +73,12 @@ class ParserTests extends org.scalatest.FunSuite {
     assert(GranolaParser(Lexer(code)) === Assertion(List(),List(CaseExpression(Identifier("x"),List(CaseEntry(LetCasePattern(Identifier("x"),IntType),VariableExpression(Identifier("x"))), CaseEntry(LetCasePattern(Identifier("y"),FloatType),FunctionCall(Identifier("toint"),List(VariableExpression(Identifier("y"))))), CaseEntry(DefaultCasePattern,IntConstantExpr(IntConstant("0"))))))))
   }
 
+  test("Anonymous function") {
+    val code = "(x: Int, y: Float) -> pow(y, x)"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(AnonymousFunction(List(Param(Identifier("x"),IntType), Param(Identifier("y"),FloatType)),FunctionCall(Identifier("pow"),List(VariableExpression(Identifier("y")), VariableExpression(Identifier("x"))))))))
+  }
+
   test("Unlabeled tuple") {
     val code =
       """

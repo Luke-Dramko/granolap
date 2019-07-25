@@ -213,7 +213,8 @@ object GranolaParser extends Parsers {
 
     val arg1fcall = identifier ~ expression ^^ { case name ~ e => FunctionCall(name, List(e)) }
 
-    //val anonymousfunc = identifier ~ Colon ~ _type ~ rep(Comma ~ identifier ~ Colon ~ _type) ~ Arrow ~ expression
+    val anonymousfunc = LParen ~ params ~ Arrow ~ expression ^^
+      { case _ ~ ps ~ _ ~ e => AnonymousFunction(ps, e) }
 
     val letexpr = Let ~ identifier ~ EqualsSign ~ expression ~ In.? ~ expression ^^
       { case _ ~ variable ~ _ ~ e1 ~ _ ~ e2 => LetExpression(variable, e1, e2) }
@@ -234,7 +235,7 @@ object GranolaParser extends Parsers {
     val nullc = NullValue ^^ { case _ => NullExpression }
 
 
-    ifexpr | ifletexpr | caseexpr | fcall | arg1fcall | letexpr | parentheticalexpr | definedfuncexpr |
+    ifexpr | ifletexpr | caseexpr | fcall | arg1fcall | letexpr | anonymousfunc | parentheticalexpr | definedfuncexpr |
       idexpr | boolc | stringc | intc | floatc | nullc
   }
 

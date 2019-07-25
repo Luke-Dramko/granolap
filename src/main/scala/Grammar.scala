@@ -19,7 +19,7 @@ case class IfExpression(cases: List[IfSubExpression], elseBody: Expression) exte
 case class IfLetExpression(cases: List[IfLetSubExpression], elseBody: Expression) extends Expression
 case class CaseExpression(variable: Identifier, cases: List[CaseEntry]) extends Expression
 case class FunctionCall(name: Identifier, params: List[Expression]) extends Expression
-case class AnonymousFunction(args: List[(Identifier, Type)], body: Expression) extends Expression
+case class AnonymousFunction(params: List[Param], body: Expression) extends Expression
 case class LetExpression(variable: Identifier, e1: Expression, e2: Expression) extends Expression
 case class ParentheticalExpression(expression: Expression) extends Expression
 case class OptionalExpression(expression: Expression) extends Expression

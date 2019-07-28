@@ -363,8 +363,8 @@ object GranolaParser extends Parsers {
       { case _ ~ _ ~ id1 ~ _ ~ e1 ~ _ ~ b1 ~ _ ~ eifls ~ _ ~ bf ~ _ =>
         IfLetExpression(IfLetSubExpression(id1, e1, b1) :: eifls, bf)}
 
-    val caseexpr = Case ~ identifier ~ LCurlyBrace ~ caseentries ~ RCurlyBrace ^^
-      { case _ ~ id ~ _ ~ cases ~ _ => CaseExpression(id, cases) }
+    val caseexpr = Case ~ expression ~ LCurlyBrace ~ caseentries ~ RCurlyBrace ^^
+      { case _ ~ e ~ _ ~ cases ~ _ => CaseExpression(e, cases) }
 
     //Right parenthesis is purposefully missing as it is consumed by the args function as a delimiter.
     val fcall = identifier ~ LParen ~ args ^^ { case name ~ _ ~ ps => FunctionCall(name, ps) }

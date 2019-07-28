@@ -257,9 +257,12 @@ object GranolaParser extends Parsers {
     val letce = Let ~ identifier ~ Colon ~ _type ~ Arrow ~ expression ~ letCaseEntries ^^
       { case _ ~ id ~ _ ~ t ~ _ ~ e ~ cases => List(CaseEntry(LetCasePattern(id, t), e)) ++ cases}
 
+    val lastce = Let ~ identifier ~ Colon ~ _type ~ Arrow ~ expression ^^
+      { case _ ~ id ~ _ ~ t ~ _ ~ e => List(CaseEntry(LetCasePattern(id, t), e))}
+
     val defaultce = Default ~ Arrow ~ expression ^^ { case _ ~ _ ~ e => List(CaseEntry(DefaultCasePattern, e))}
 
-    letce | defaultce
+    letce | lastce | defaultce
   }
 
   /**
@@ -294,10 +297,12 @@ object GranolaParser extends Parsers {
   def listCaseEntries: Parser[List[CaseEntry]] = {
     val listce = listCaseEntriesHelper ~ expression ~ listCaseEntries ^^
       { case ids ~ e ~ ces => List(CaseEntry(ListCasePattern(ids), e)) ++ ces}
+    val lastce = listCaseEntriesHelper ~ expression ^^
+      { case ids ~ e => List(CaseEntry(ListCasePattern(ids), e))}
 
     val defaultce = Default ~ Arrow ~ expression ^^ { case _ ~ _ ~ e => List(CaseEntry(DefaultCasePattern, e))}
 
-    listce | defaultce
+    listce | lastce | defaultce
   }
 
   /**

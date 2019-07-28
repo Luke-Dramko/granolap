@@ -162,4 +162,38 @@ class ParserTests extends org.scalatest.FunSuite {
     assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("OptInt"),SumType(List(IntType, NullType)))),List())
     )
   }
+
+  test("Case expression and no default: enums") {
+    val code =
+      """
+        |def containsBoth(contacts: Array[ContactInfo], hasPhone: Bool, hasEmail: Bool, i:Int) -> Bool {
+        |   if hasPhone && hasEmail {
+        |      true
+        |   } else if i == length(contacts) {
+        |      false
+        |   } else {
+        |      case contacts(i).1 {
+        |	     EMAIL -> containsBoth(contacts, hasPhone, true, i + 1)
+        |             PHONE -> containsBoth(contacts, true, hasEmail, i + 1)
+        |	  }
+        |   }
+        |}
+        |
+        |assert(containsBoth(contacts, false, false, 0))
+      """.stripMargin
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionDef(Identifier("containsBoth"),List(Param(Identifier("contacts"),ArrayType(DefinedType(Identifier("ContactInfo")))), Param(Identifier("hasPhone"),BoolType), Param(Identifier("hasEmail"),BoolType), Param(Identifier("i"),IntType)),BoolType,IfExpression(List(IfSubExpression(FunctionCall(Identifier("&&"),List(VariableExpression(Identifier("hasPhone")), VariableExpression(Identifier("hasEmail")))),BoolConstantExpr(BoolConstant("true"))), IfSubExpression(FunctionCall(Identifier("=="),List(VariableExpression(Identifier("i")), FunctionCall(Identifier("length"),List(VariableExpression(Identifier("contacts")))))),BoolConstantExpr(BoolConstant("false")))),CaseExpression(Selection(FunctionCall(Identifier("contacts"),List(VariableExpression(Identifier("i")))),IndexLabel(1)),List(CaseEntry(ListCasePattern(List(Identifier("EMAIL"))),FunctionCall(Identifier("containsBoth"),List(VariableExpression(Identifier("contacts")), VariableExpression(Identifier("hasPhone")), BoolConstantExpr(BoolConstant("true")), FunctionCall(Identifier("+"),List(VariableExpression(Identifier("i")), IntConstantExpr(IntConstant("1"))))))), CaseEntry(ListCasePattern(List(Identifier("PHONE"))),FunctionCall(Identifier("containsBoth"),List(VariableExpression(Identifier("contacts")), BoolConstantExpr(BoolConstant("true")), VariableExpression(Identifier("hasEmail")), FunctionCall(Identifier("+"),List(VariableExpression(Identifier("i")), IntConstantExpr(IntConstant("1"))))))))))), FunctionCall(Identifier("assert"),List(FunctionCall(Identifier("containsBoth"),List(VariableExpression(Identifier("contacts")), BoolConstantExpr(BoolConstant("false")), BoolConstantExpr(BoolConstant("false")), IntConstantExpr(IntConstant("0")))))))))
+  }
+
+  test("Case expression with no default: general sum type") {
+    val code =
+      """
+        |typedef Number as (Int or Float)
+        |
+        |case x {
+        |   let y: Float -> toint(y)
+        |   let y: Int -> y
+        |}
+      """.stripMargin
+    assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("Number"),SumType(List(IntType, FloatType)))),List(CaseExpression(VariableExpression(Identifier("x")),List(CaseEntry(LetCasePattern(Identifier("y"),FloatType),FunctionCall(Identifier("toint"),List(VariableExpression(Identifier("y"))))), CaseEntry(LetCasePattern(Identifier("y"),IntType),VariableExpression(Identifier("y"))))))))
+  }
 }

@@ -394,12 +394,12 @@ object GranolaParser extends Parsers {
     val floatc = floatconst ^^ { case fc => FloatConstantExpr(fc) }
     val nullc = NullValue ^^ { case _ => NullExpression }
 
-    val fcall2args = { fcall | idexpr | boolc | stringc | intc | floatc | nullc } ~
+    val fcall2args = { fcall | parentheticalexpr | idexpr | boolc | stringc | intc | floatc | nullc } ~
       identifier ~ expression ^^
       { case e1 ~ name ~ e2 => FunctionCall(name, List(e1, e2)) }
 
 
-    ifexpr | ifletexpr | caseexpr | letexpr | anonymousfunc | parentheticalexpr | definedfuncexpr | fcall2args | fcall |
+    ifexpr | ifletexpr | caseexpr | letexpr | anonymousfunc | definedfuncexpr | fcall2args | parentheticalexpr | fcall |
       idexpr | boolc | stringc | intc | floatc | nullc
   }
 

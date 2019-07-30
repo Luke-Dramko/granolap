@@ -196,4 +196,16 @@ class ParserTests extends org.scalatest.FunSuite {
       """.stripMargin
     assert(GranolaParser(Lexer(code)) === Assertion(List(TypedefStatement(Identifier("Number"),SumType(List(IntType, FloatType)))),List(CaseExpression(VariableExpression(Identifier("x")),List(CaseEntry(LetCasePattern(Identifier("y"),FloatType),FunctionCall(Identifier("toint"),List(VariableExpression(Identifier("y"))))), CaseEntry(LetCasePattern(Identifier("y"),IntType),VariableExpression(Identifier("y"))))))))
   }
+
+  test("Function call as first argument") {
+    val code = "f(a) + b"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("+"),List(FunctionCall(Identifier("f"),List(VariableExpression(Identifier("a")))), VariableExpression(Identifier("b")))))))
+  }
+
+  test("Parenthetical expression as first argument") {
+    val code = "(a + b) * c"
+
+    assert(GranolaParser(Lexer(code)) === Assertion(List(),List(FunctionCall(Identifier("*"),List(ParentheticalExpression(FunctionCall(Identifier("+"),List(VariableExpression(Identifier("a")), VariableExpression(Identifier("b"))))), VariableExpression(Identifier("c")))))))
+  }
 }
